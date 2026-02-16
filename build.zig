@@ -15,6 +15,7 @@ const BoringSSLModule = struct {
 // Other dependencies here might be added as needed
 const BuildSource = struct {
     bcm: BoringSSLModule,
+    bench: BoringSSLModule,
     bssl: BoringSSLModule,
     crypto: BoringSSLModule,
     crypto_test: BoringSSLModule,
@@ -171,6 +172,52 @@ pub fn build(b: *std.Build) !void {
     const gtest = gtest_dep.artifact("gtest");
     const gmock = gtest_dep.artifact("gmock");
 
+    // Build Google Benchmark as a static library
+    const benchmark_dep = b.dependency("benchmark", .{});
+    const gbenchmark = b.addLibrary(.{
+        .name = "benchmark",
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            .pic = pic,
+        }),
+        .linkage = .static,
+    });
+    gbenchmark.root_module.link_libc = true;
+    gbenchmark.root_module.link_libcpp = true;
+    gbenchmark.addIncludePath(benchmark_dep.path("include"));
+    gbenchmark.addIncludePath(benchmark_dep.path("src"));
+
+    const benchmark_srcs = [_][]const u8{
+        "src/benchmark.cc",
+        "src/benchmark_api_internal.cc",
+        "src/benchmark_name.cc",
+        "src/benchmark_register.cc",
+        "src/benchmark_runner.cc",
+        "src/check.cc",
+        "src/colorprint.cc",
+        "src/commandlineflags.cc",
+        "src/complexity.cc",
+        "src/console_reporter.cc",
+        "src/counter.cc",
+        "src/csv_reporter.cc",
+        "src/json_reporter.cc",
+        "src/perf_counters.cc",
+        "src/reporter.cc",
+        "src/statistics.cc",
+        "src/string_util.cc",
+        "src/sysinfo.cc",
+        "src/timers.cc",
+    };
+    const benchmark_flags = [_][]const u8{ "-std=c++17", "-DBENCHMARK_STATIC_DEFINE", "-DNDEBUG" };
+    for (benchmark_srcs) |src| {
+        gbenchmark.addCSourceFile(.{
+            .file = benchmark_dep.path(src),
+            .flags = &benchmark_flags,
+        });
+    }
+    gbenchmark.installHeadersDirectory(benchmark_dep.path("include"), "", .{});
+
     const ModuleInfo = struct {
         name: []const u8,
         module: *const BoringSSLModule,
@@ -186,6 +233,18 @@ pub fn build(b: *std.Build) !void {
             .name = "bcm",
             .module = &build_source.bcm,
             .kind = .lib,
+        },
+        ModuleInfo{
+            .name = "bench",
+            .module = &build_source.bench,
+            .kind = .exe,
+            .module_dependencies = &.{
+                "ssl",
+                "crypto",
+                "bcm",
+            },
+            .dependencies = &.{gbenchmark},
+            .system_dependencies = if (target.result.os.tag == .windows) &.{ "ws2_32", "dbghelp" } else &.{},
         },
         ModuleInfo{
             .name = "bssl",
