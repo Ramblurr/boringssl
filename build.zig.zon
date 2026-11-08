@@ -1,12 +1,12 @@
 .{
     .name = .boringssl,
-    .version = "0.20260526.0",
+    .version = "0.20261105.0",
     .fingerprint = 0x5f0947d235641b12,
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .boringssl = .{
-            .url = "https://github.com/google/boringssl/archive/190fa71435c8675b80d7883e5d01858db4c91180.tar.gz",
-            .hash = "N-V-__8AAJhc0w0H8yQ1jOqE3CHmQtOLsdy2qmZ5l4AsJya7",
+            .url = "https://github.com/google/boringssl/archive/3dc4b63808921e914a3fb1fa61869abc3938781b.tar.gz",
+            .hash = "N-V-__8AAOmbgA5EZOl7Ab5SwaV3OYkpkxc8qGL5-G75QWBM",
         },
         .nasm = .{
             .url = "git+https://github.com/allyourcodebase/nasm.git#f11aa6ed5a7eb339259b3439b3e47d58dba998cc",
