@@ -67,7 +67,5 @@ const ctx = ssl.EVP_CIPHER_CTX_new();
 ### Windows support:
 At the moment only x86_64-windows-gnu is functional. MSVC doesn't work!
 
-GNU doesn't seem an official target by boringssl for windows which is why we need the [patch](patches/p256_gnuc.patch).
-
 ### Zig Version
 The target zig version is 0.17.0

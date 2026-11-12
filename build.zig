@@ -1,5 +1,4 @@
 const std = @import("std");
-const patch = @import("patch");
 
 const BoringSSLModule = struct {
     srcs: [][]const u8,
@@ -124,29 +123,8 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const pic = b.option(bool, "pie", "Produce Position Independent Code");
 
-    const build_root = b.root.root_dir.handle;
-
     const upstream = b.dependency("boringssl", .{});
-
-    var patches: std.ArrayList(std.Build.LazyPath) = .empty;
-
-    // Add patches
-    const patch_dir = try build_root.openDir(b.graph.io, "patches", .{ .iterate = true });
-    var iterator = patch_dir.iterate();
-    while (try iterator.next(b.graph.io)) |p| {
-        const patch_path = try std.fmt.allocPrint(b.allocator, "patches/{s}", .{p.name});
-        try patches.append(b.allocator, b.path(patch_path));
-    }
-
-    // Patch boringssl
-    const patcher = patch.Patcher.init(b, .{
-        .optimize = .ReleaseSafe,
-        .target = b.graph.host,
-        .root_directory = upstream.path(""),
-        .strip = 1,
-        .patches = patches.items,
-    });
-    const upstream_root = patcher.output_directory;
+    const upstream_root = upstream.path("");
 
     const io = b.graph.io;
 
